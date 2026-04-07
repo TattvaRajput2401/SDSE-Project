@@ -1,5 +1,5 @@
 node_modules/
-Backend/node_modules/
+Backend/astrology-api/node_modules/
 .env
 *.log
 dist/
