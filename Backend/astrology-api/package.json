@@ -2,11 +2,12 @@
   "name": "sdse-capstopne",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev":"nodemon server.js",
-    "start":"node server.js"
+    "build": "tsc",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +29,14 @@
     "winston": "^3.18.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.6.0",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
-
