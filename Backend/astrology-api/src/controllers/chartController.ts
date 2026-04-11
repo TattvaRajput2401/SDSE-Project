@@ -85,9 +85,23 @@ class ChartController extends BaseController {
   });
 
   public saveChart = this.asyncHandler(async (req: Request, res: Response) => {
-    // Already handled by generateChart logic in this simplified model, 
-    // but aligning with UML method list.
-    return this.generateChart(req, res);
+    // Identical to generateChart - aligns with UML method list
+    const userId = req.user?._id;
+    if (!userId) return this.fail(res, 401, 'Unauthorized');
+
+    const profile = await UserProfileModel.findOne({ userId, isDeleted: false });
+    if (!profile) return this.fail(res, 404, 'Please create your profile first');
+
+    const chartData = await astroService.fetchBirthChart(this.buildChartParamsFromProfile(profile));
+    const chart = await BirthChartModel.create({
+      userId,
+      profileId: profile._id,
+      chartName: req.body.chartName || 'My Birth Chart',
+      chartData,
+      chartImage: String((chartData.svg_chart || chartData.chart_url || '') as string),
+      generatedAt: new Date(),
+    });
+    return this.created(res, chart, 'Chart saved successfully');
   });
 
   public deleteChart = this.asyncHandler(async (req: Request, res: Response) => {
