@@ -5,8 +5,8 @@ import { VedicParams } from "../types/vedic";
 import { cacheService } from "./cacheService";
 import { IAstroService } from "./interfaces/IAstroService";
 
-export class VedicAstroService extends BaseService implements IAstroService {
-  protected readonly serviceName = "VedicAstroService";
+export class AstroService extends BaseService implements IAstroService {
+  protected readonly serviceName = "AstroService";
   private readonly client: AxiosInstance;
 
   constructor() {
@@ -17,7 +17,7 @@ export class VedicAstroService extends BaseService implements IAstroService {
     });
   }
 
-  public async callEndpoint(
+  protected async callEndpoint(
     endpoint: string,
     params: Record<string, unknown>,
     cacheKey: string,
@@ -38,7 +38,7 @@ export class VedicAstroService extends BaseService implements IAstroService {
     return response.data as Record<string, unknown>;
   }
 
-  public checkManglikDosh(params: VedicParams): Promise<Record<string, unknown>> {
+  public fetchManglikDosh(params: VedicParams): Promise<Record<string, unknown>> {
     return this.callEndpoint(
       vedicAstroConfig.endpoints.manglikDosh,
       { ...params },
@@ -46,23 +46,33 @@ export class VedicAstroService extends BaseService implements IAstroService {
     );
   }
 
-  public checkKalsarpDosh(params: VedicParams): Promise<Record<string, unknown>> {
+  public fetchOtherdosha(params: VedicParams, doshaType: string): Promise<Record<string, unknown>> {
+    let endpoint = "";
+    switch (doshaType) {
+      case "kalsarp":
+        endpoint = vedicAstroConfig.endpoints.kalsarpDosh;
+        break;
+      case "sadesati":
+        endpoint = vedicAstroConfig.endpoints.sadesati;
+        break;
+      case "pitradosh":
+        endpoint = vedicAstroConfig.endpoints.pitradosh;
+        break;
+      case "nadi":
+        endpoint = vedicAstroConfig.endpoints.nadiDosh;
+        break;
+      default:
+        throw new Error("Invalid dosha type for fetchOtherdosha");
+    }
+
     return this.callEndpoint(
-      vedicAstroConfig.endpoints.kalsarpDosh,
+      endpoint,
       { ...params },
-      `kalsarp:${params.dob}:${params.tob}:${params.lat}:${params.lon}:${params.tz}`
+      `${doshaType}:${params.dob}:${params.tob}:${params.lat}:${params.lon}:${params.tz}`
     );
   }
 
-  public checkSadesati(params: VedicParams): Promise<Record<string, unknown>> {
-    return this.callEndpoint(
-      vedicAstroConfig.endpoints.sadesati,
-      { ...params },
-      `sadesati:${params.dob}:${params.tob}:${params.lat}:${params.lon}:${params.tz}`
-    );
-  }
-
-  public generateBirthChart(params: VedicParams): Promise<Record<string, unknown>> {
+  public fetchBirthChart(params: VedicParams): Promise<Record<string, unknown>> {
     return this.callEndpoint(
       vedicAstroConfig.endpoints.birthChart,
       { ...params },
@@ -71,4 +81,4 @@ export class VedicAstroService extends BaseService implements IAstroService {
   }
 }
 
-export const vedicAstroService = new VedicAstroService();
+export const astroService = new AstroService();

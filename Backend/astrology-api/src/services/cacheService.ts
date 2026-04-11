@@ -29,14 +29,14 @@ export class CacheService extends BaseService implements ICacheService {
     }
   }
 
-  public async delete(key: string): Promise<boolean> {
+  private async invalidate(key: string): Promise<boolean> {
     try {
       const client = getRedisClient();
       if (!client) return false;
       await client.del(key);
       return true;
     } catch (error) {
-      this.logError("Cache DELETE failed", error instanceof Error ? error.stack : undefined);
+      this.logError("Cache INVALIDATE failed", error instanceof Error ? error.stack : undefined);
       return false;
     }
   }

@@ -3,8 +3,7 @@ import { BaseController } from "../core/BaseController";
 import { DoshaReportModel } from "../models/DoshaReportModel";
 import { UserProfileModel } from "../models/UserProfileModel";
 import { doshaService } from "../services/doshaService";
-import { vedicAstroConfig } from "../config/vedicAstroConfig";
-import { vedicAstroService } from "../services/vedicAstroService";
+import { astroService } from "../services/AstroService";
 import { DoshaType } from "../types/vedic";
 
 const DOSHA_TYPES: DoshaType[] = ["manglik", "kalsarp", "sadesati", "pitradosh", "nadi"];
@@ -14,27 +13,10 @@ class DoshaController extends BaseController {
     doshaType: DoshaType,
     params: { dob: string; tob: string; lat: number; lon: number; tz: string }
   ): Promise<Record<string, unknown>> {
-    switch (doshaType) {
-      case "manglik":
-        return vedicAstroService.checkManglikDosh(params);
-      case "kalsarp":
-        return vedicAstroService.checkKalsarpDosh(params);
-      case "sadesati":
-        return vedicAstroService.checkSadesati(params);
-      case "pitradosh":
-        return vedicAstroService.callEndpoint(
-          vedicAstroConfig.endpoints.pitradosh,
-          params,
-          `pitradosh:${params.dob}:${params.tob}:${params.lat}:${params.lon}:${params.tz}`
-        );
-      case "nadi":
-        return vedicAstroService.callEndpoint(
-          vedicAstroConfig.endpoints.nadiDosh,
-          params,
-          `nadi:${params.dob}:${params.tob}:${params.lat}:${params.lon}:${params.tz}`
-        );
-      default:
-        throw new Error("Invalid dosha type");
+    if (doshaType === "manglik") {
+      return astroService.fetchManglikDosh(params);
+    } else {
+      return astroService.fetchOtherdosha(params, doshaType);
     }
   }
 
@@ -124,7 +106,8 @@ class DoshaController extends BaseController {
       userId,
       profileId: profile._id,
       doshaType,
-      reportData,
+      inputParams: params,
+      apiResponse: reportData,
       isPresent,
       severity,
       remedies,

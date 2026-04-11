@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { birthChartController } from "../controllers/birthChartController";
+import { chartController } from "../controllers/chartController";
 import { authMiddleware } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validationMiddleware";
 import {
@@ -10,16 +10,11 @@ import {
 const router = Router();
 
 router.use(authMiddleware);
-router.post("/generate", validate(chartGenerationSchema), birthChartController.generateChart);
-router.get("/user", birthChartController.getUserCharts);
-router.get("/user/:userId", birthChartController.getUserCharts);
-router.get("/:chartId", birthChartController.getChartById);
-router.patch("/:chartId", birthChartController.updateChart);
-router.patch(
-  "/:chartId/birth-details",
-  validate(birthDetailsUpdateSchema),
-  birthChartController.updateBirthDetails
-);
-router.delete("/:chartId", birthChartController.deleteChart);
+router.post("/generate", validate(chartGenerationSchema), chartController.generateChart);
+router.get("/user", chartController.getChart);
+router.get("/user/:userId", chartController.getChart);
+router.get("/:chartId", chartController.getChartById);
+router.patch("/:chartId", chartController.renameChart);
+router.delete("/:chartId", chartController.deleteChart);
 
 export default router;

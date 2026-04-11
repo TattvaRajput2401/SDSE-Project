@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import { BaseController } from "../core/BaseController";
 import { BirthChartModel } from "../models/BirthChartModel";
-import { UserProfileModel } from "../models/UserProfileModel";
+import { IUserProfile, UserProfileModel } from "../models/UserProfileModel";
 import { birthChartService } from "../services/birthChartService";
-import { vedicAstroService } from "../services/vedicAstroService";
+import { astroService } from "../services/AstroService";
 
-class BirthChartController extends BaseController {
-  private buildChartParamsFromProfile(profile: any) {
+class ChartController extends BaseController {
+  private buildChartParamsFromProfile(profile: IUserProfile) {
     return {
       dob: birthChartService.formatDate(profile.personalInfo.dateOfBirth),
       tob: profile.personalInfo.timeOfBirth,
@@ -23,7 +23,7 @@ class BirthChartController extends BaseController {
     const profile = await UserProfileModel.findOne({ userId, isDeleted: false });
     if (!profile) return this.fail(res, 404, "Please create your profile first");
 
-    const chartData = await vedicAstroService.generateBirthChart(this.buildChartParamsFromProfile(profile));
+    const chartData = await astroService.fetchBirthChart(this.buildChartParamsFromProfile(profile));
 
     const chart = await BirthChartModel.create({
       userId,
@@ -37,7 +37,7 @@ class BirthChartController extends BaseController {
     return this.created(res, chart, "Birth chart generated successfully");
   });
 
-  public getUserCharts = this.asyncHandler(async (req: Request, res: Response) => {
+  public getChart = this.asyncHandler(async (req: Request, res: Response) => {
     const reqUser = req.user;
     if (!reqUser) return this.fail(res, 401, "Unauthorized");
 
@@ -67,7 +67,7 @@ class BirthChartController extends BaseController {
     return this.ok(res, chart);
   });
 
-  public updateChart = this.asyncHandler(async (req: Request, res: Response) => {
+  public renameChart = this.asyncHandler(async (req: Request, res: Response) => {
     const reqUser = req.user;
     if (!reqUser) return this.fail(res, 401, "Unauthorized");
 
@@ -81,37 +81,13 @@ class BirthChartController extends BaseController {
     chart.chartName = req.body.chartName || chart.chartName;
     await chart.save();
 
-    return this.ok(res, chart, "Chart updated");
+    return this.ok(res, chart, "Chart renamed");
   });
 
-  public updateBirthDetails = this.asyncHandler(async (req: Request, res: Response) => {
-    const reqUser = req.user;
-    if (!reqUser) return this.fail(res, 401, "Unauthorized");
-
-    const chart = await BirthChartModel.findById(req.params.chartId);
-    if (!chart || chart.isDeleted) return this.fail(res, 404, "Chart not found");
-
-    if (reqUser.role !== "admin" && String(chart.userId) !== String(reqUser._id)) {
-      return this.fail(res, 403, "Insufficient access");
-    }
-
-    const profile = await UserProfileModel.findById(chart.profileId);
-    if (!profile || profile.isDeleted) return this.fail(res, 404, "Profile not found");
-
-    if (req.body.dateOfBirth !== undefined) profile.personalInfo.dateOfBirth = new Date(req.body.dateOfBirth);
-    if (req.body.timeOfBirth !== undefined) profile.personalInfo.timeOfBirth = req.body.timeOfBirth;
-    if (req.body.latitude !== undefined) profile.personalInfo.placeOfBirth.coordinates.latitude = req.body.latitude;
-    if (req.body.longitude !== undefined)
-      profile.personalInfo.placeOfBirth.coordinates.longitude = req.body.longitude;
-    await profile.save();
-
-    const chartData = await vedicAstroService.generateBirthChart(this.buildChartParamsFromProfile(profile));
-    chart.chartData = chartData;
-    chart.chartImage = String((chartData.svg_chart || chartData.chart_url || "") as string);
-    chart.generatedAt = new Date();
-    await chart.save();
-
-    return this.ok(res, chart, "Chart regenerated");
+  public saveChart = this.asyncHandler(async (req: Request, res: Response) => {
+    // Already handled by generateChart logic in this simplified model, 
+    // but aligning with UML method list.
+    return this.generateChart(req, res);
   });
 
   public deleteChart = this.asyncHandler(async (req: Request, res: Response) => {
@@ -131,4 +107,4 @@ class BirthChartController extends BaseController {
   });
 }
 
-export const birthChartController = new BirthChartController();
+export const chartController = new ChartController();

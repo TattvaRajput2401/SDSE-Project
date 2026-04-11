@@ -32,7 +32,7 @@ export class DoshaService extends BaseService {
     doshaType: string;
     isPresent: boolean;
     severity: string;
-    reportData?: Record<string, unknown>;
+    apiResponse?: Record<string, unknown>;
     remedies?: string[];
     cachedAt?: Date;
     profileId?: { personalInfo?: { name?: string; dateOfBirth?: Date } };
@@ -42,7 +42,7 @@ export class DoshaService extends BaseService {
       doshaType: report.doshaType,
       isPresent: report.isPresent,
       severity: report.severity,
-      summary: String(report.reportData?.summary || "No summary available"),
+      summary: String(report.apiResponse?.summary || "No summary available"),
       remedies: report.remedies || [],
       cachedAt: report.cachedAt,
       profile: report.profileId

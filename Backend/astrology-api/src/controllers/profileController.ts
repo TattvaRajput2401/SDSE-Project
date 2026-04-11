@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { BaseController } from "../core/BaseController";
 import { BirthChartModel } from "../models/BirthChartModel";
 import { DoshaReportModel } from "../models/DoshaReportModel";
-import { UserProfileModel } from "../models/UserProfileModel";
+import { profileService } from "../services/profileService";
 
 class ProfileController extends BaseController {
   private canAccessUser(reqUserId: string, reqUserRole: string, targetUserId: string): boolean {
@@ -13,11 +13,11 @@ class ProfileController extends BaseController {
     const userId = req.user?._id;
     if (!userId) return this.fail(res, 401, "Unauthorized");
 
-    const existingProfile = await UserProfileModel.findOne({ userId, isDeleted: false });
+    const existingProfile = await profileService.getProfileByUserId(userId);
     if (existingProfile) return this.fail(res, 409, "Profile already exists. Use update endpoint.");
 
-    const profile = await UserProfileModel.create({
-      userId,
+    const profile = await profileService.createProfile({
+      userId: userId as any,
       personalInfo: {
         name: req.body.name,
         gender: req.body.gender,
@@ -45,7 +45,7 @@ class ProfileController extends BaseController {
       return this.fail(res, 403, "Insufficient access");
     }
 
-    const profile = await UserProfileModel.findOne({ userId: targetUserId, isDeleted: false });
+    const profile = await profileService.getProfileByUserId(targetUserId);
     if (!profile) return this.fail(res, 404, "Profile not found");
 
     return this.ok(res, profile);
@@ -60,25 +60,10 @@ class ProfileController extends BaseController {
       return this.fail(res, 403, "Insufficient access");
     }
 
-    const profile = await UserProfileModel.findOne({ userId: targetUserId, isDeleted: false });
+    const profile = await profileService.getProfileByUserId(targetUserId);
     if (!profile) return this.fail(res, 404, "Profile not found");
 
-    const updates = req.body as Record<string, unknown>;
-    if (updates.name !== undefined) profile.personalInfo.name = String(updates.name);
-    if (updates.gender !== undefined)
-      profile.personalInfo.gender = updates.gender as "male" | "female" | "other";
-    if (updates.dateOfBirth !== undefined) profile.personalInfo.dateOfBirth = new Date(String(updates.dateOfBirth));
-    if (updates.timeOfBirth !== undefined) profile.personalInfo.timeOfBirth = String(updates.timeOfBirth);
-    if (updates.city !== undefined) profile.personalInfo.placeOfBirth.city = String(updates.city);
-    if (updates.state !== undefined) profile.personalInfo.placeOfBirth.state = String(updates.state);
-    if (updates.country !== undefined) profile.personalInfo.placeOfBirth.country = String(updates.country);
-    if (updates.latitude !== undefined)
-      profile.personalInfo.placeOfBirth.coordinates.latitude = Number(updates.latitude);
-    if (updates.longitude !== undefined)
-      profile.personalInfo.placeOfBirth.coordinates.longitude = Number(updates.longitude);
-    if (updates.timezone !== undefined) profile.timezone = String(updates.timezone);
-
-    await profile.save();
+    await profileService.updateProfile(profile, req.body);
     return this.ok(res, profile, "Profile updated successfully");
   });
 
@@ -91,12 +76,10 @@ class ProfileController extends BaseController {
       return this.fail(res, 403, "Insufficient access");
     }
 
-    const profile = await UserProfileModel.findOne({ userId: targetUserId, isDeleted: false });
+    const profile = await profileService.getProfileByUserId(targetUserId);
     if (!profile) return this.fail(res, 404, "Profile not found");
 
-    profile.isDeleted = true;
-    profile.deletedAt = new Date();
-    await profile.save();
+    await profileService.softDeleteProfile(profile);
 
     await BirthChartModel.updateMany({ profileId: profile._id }, { isDeleted: true });
     await DoshaReportModel.deleteMany({ profileId: profile._id });

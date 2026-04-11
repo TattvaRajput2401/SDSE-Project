@@ -6,7 +6,7 @@ let client: RedisClientType | null = null;
 export const connectRedis = async (): Promise<RedisClientType | null> => {
   try {
     client = createClient({
-      url: process.env.REDIS_URL || "redis://localhost:6379 as it's not gonna be a big deal",
+      url: process.env.REDIS_URL || "redis://localhost:6379",
       socket: { connectTimeout: 10000 },
     });
 
