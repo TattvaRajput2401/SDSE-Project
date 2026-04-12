@@ -11,7 +11,7 @@ class BaseController {
   #ok(res: Response, data: unknown, message?: string) Response
   #created(res: Response, data: unknown, message?: string) Response
   #fail(res: Response, status: number, message: string) Response
-  #asyncHandler~TReq extends Request = Request~(fn: (req: TReq, res: Response, next: NextFunction) => Promise~Response | void~) (req: TReq, res: Response, next: NextFunction) => void
+  #asyncHandler(fn: AsyncHandlerFn) RequestHandler
 }
 
 class BaseService {
@@ -22,7 +22,7 @@ class BaseService {
 }
 
 class AstroController {
-  -signToken(user: {_id: unknown; email: string; role: "user" | "admin"}) string
+  -signToken(user: AuthPayload) string
   +register: RequestHandler
   +login: RequestHandler
   +forgotPassword: RequestHandler
@@ -41,7 +41,7 @@ class ChartController {
 }
 
 class DoshaController {
-  -resolveDoshaRequest(doshaType: DoshaType, params: {dob: string; tob: string; lat: number; lon: number; tz: string}) Promise~Record<string, unknown>~
+  -resolveDoshaRequest(doshaType: DoshaType, params: VedicParams) Promise~Record<string, unknown>~
   +getDoshaTypes: RequestHandler
   +searchDoshas: RequestHandler
   +checkDosha: RequestHandler
@@ -74,21 +74,21 @@ class AstroService {
 
 class BirthChartService {
   #serviceName: string
-  +formatDate(date: Date | string) string
+  +formatDate(date: DateInput) string
   +isValidTimeFormat(time: string) boolean
   +convertTo24Hour(time12h: string) string
 }
 
 class DoshaService {
   #serviceName: string
-  +formatDate(date: Date | string) string
-  +calculateSeverity(apiResponse: Record<string, unknown>) "low" | "medium" | "high"
-  +formatReport(report: {_id: unknown; doshaType: string; isPresent: boolean; severity: string; apiResponse?: Record<string, unknown>; remedies?: string[]; cachedAt?: Date; profileId?: {personalInfo?: {name?: string; dateOfBirth?: Date}}}) Record<string, unknown>
+  +formatDate(date: DateInput) string
+  +calculateSeverity(apiResponse: Record<string, unknown>) SeverityLevel
+  +formatReport(report: FormattableDoshaReport) Record<string, unknown>
 }
 
 class ProfileService {
   #serviceName: string
-  +getProfileByUserId(userId: string) Promise~IUserProfile | null~
+  +getProfileByUserId(userId: string) Promise~IUserProfileOrNull~
   +createProfile(profileData: Partial~IUserProfile~) Promise~IUserProfile~
   +updateProfile(profile: IUserProfile, updates: Record<string, any>) Promise~IUserProfile~
   +softDeleteProfile(profile: IUserProfile) Promise~void~
@@ -102,8 +102,44 @@ class LoggerService {
 }
 
 class DoshaReportHelper {
-  +isExpired(report: IDoshaReport) boolean {static}
-  +cacheReport(data: any) Promise~IDoshaReport~ {static}
+  +isExpired(report: IDoshaReport) boolean
+  +cacheReport(data: any) Promise~IDoshaReport~
+}
+
+class FormattableDoshaReport {
+  <<type>>
+}
+
+class DateInput {
+  <<type>>
+  Date
+  string
+}
+
+class IUserProfileOrNull {
+  <<type>>
+  IUserProfile
+  null
+}
+
+class SeverityLevel {
+  <<type>>
+  low
+  medium
+  high
+}
+
+class UserRole {
+  <<type>>
+  user
+  admin
+}
+
+class Gender {
+  <<type>>
+  male
+  female
+  other
 }
 
 class IAstroService {
@@ -117,7 +153,7 @@ class AuthPayload {
   <<interface>>
   +_id: string
   +email: string
-  +role: "user" | "admin"
+  +role: UserRole
 }
 
 class VedicParams {
@@ -133,7 +169,7 @@ class User {
   +name: string
   +email: string
   +password: string
-  +role: "user" | "admin"
+  +role: UserRole
   +resetPasswordToken?: string
   +resetPasswordExpires?: Date
   +createdAt: Date
@@ -150,7 +186,7 @@ class UserProfile {
 
 class IPersonalInfo {
   +name: string
-  +gender: "male" | "female" | "other"
+  +gender: Gender
   +dateOfBirth: Date
   +timeOfBirth: string
   +placeOfBirth: IPlaceOfBirth
@@ -185,7 +221,7 @@ class DoshaReport {
   +inputParams: Record<string, unknown>
   +apiResponse: Record<string, unknown>
   +isPresent: boolean
-  +severity: "low" | "medium" | "high"
+  +severity: SeverityLevel
   +remedies: string[]
   +cachedAt: Date
   +expiresAt: Date
