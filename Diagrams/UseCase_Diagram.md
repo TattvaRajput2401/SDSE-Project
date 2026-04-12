@@ -1,98 +1,91 @@
-# Use Case Diagram - Vedic Astrology Application
+```mermaid
+graph TB
+    subgraph System["Vedic Astrology System"]
+        UC1["Manage Birth Profile<br/>(Save DOB, TOB, Coordinates)"]
+        UC2["Calculate Birth Chart<br/>(Virtual Rendering)"]
+        UC3["Analyse Dosha Status<br/>(Mangal, Kaal Sarp)"]
+        UC4["Manage Saved Reports<br/>(CRUD Operations)"]
+        UC5["Request Account Deletion<br/>(Soft-Delete 30 Days)"]
+    end
+    
+    subgraph External["External Systems"]
+        API["VedicAstro API<br/>(Planetary Calculations)"]
+        DB["MongoDB<br/>(Data Persistence)"]
+    end
+    
+    Actor["👤 Registered User"]
+    
+    Actor -->|Uses| UC1
+    Actor -->|Uses| UC2
+    Actor -->|Uses| UC3
+    Actor -->|Uses| UC4
+    Actor -->|Uses| UC5
+    
+    UC1 -->|Stores| DB
+    UC2 -->|Calls| API
+    UC2 -->|Stores| DB
+    UC3 -->|Stores| DB
+    UC4 -->|CRUD| DB
+    UC5 -->|Soft-Delete| DB
+    
+    style System fill:#e1f5ff
+    style External fill:#fff3e0
+    style Actor fill:#f3e5f5
+    style UC1 fill:#c8e6c9
+    style UC2 fill:#c8e6c9
+    style UC3 fill:#c8e6c9
+    style UC4 fill:#c8e6c9
+    style UC5 fill:#c8e6c9
+    style API fill:#ffe0b2
+    style DB fill:#ffe0b2
+```
 
-## Overview
-This use case diagram illustrates the interactions between a registered user and the Vedic Astrology application system. It shows the primary functionalities available to users and the external systems the application integrates with.
+## Use Case Documentation
 
-## Actors
-- **REGISTERED USER**: The primary actor who interacts with the system to access astrology-related features.
-
-## Use Cases
-
-### 1. **MANAGE BIRTH PROFILE**
+### 1. **Manage Birth Profile**
 - **Description**: Save DOB (Date of Birth), TOB (Time of Birth), and User Coordinates
 - **Actors**: Registered User
 - **Purpose**: Capture essential biographical data required for astrological calculations
-- **Details**: 
-  - Date of Birth
-  - Time of Birth
-  - Geographic Coordinates (Latitude/Longitude)
+- **Preconditions**: User must be authenticated
+- **Main Flow**: User enters birth data → System validates → Data stored in MongoDB
 
-### 2. **CALCULATE BIRTH CHART**
+### 2. **Calculate Birth Chart**
 - **Description**: Virtual Rendering via VedicAstro API
 - **Actors**: Registered User
 - **Purpose**: Generate comprehensive birth chart based on user's birth data
-- **External System**: VedicAstro API (for calculation and rendering)
-- **Details**: Leverages external VedicAstro API to compute planetary positions and generate visual birth chart
+- **External Systems**: VedicAstro API
+- **Main Flow**: User triggers calculation → System queries VedicAstro API → Results cached and stored
 
-### 3. **ANALYSE DOSHA STATUS**
-- **Description**: Analyze Mangal, Kaal Sarp and Caching
+### 3. **Analyse Dosha Status**
+- **Description**: Analyze Mangal Dosha, Kaal Sarp Dosha with caching
 - **Actors**: Registered User
-- **Purpose**: Provide detailed analysis of doshas affecting the user's astrological profile
-- **Key Doshas Analyzed**:
-  - Mangal Dosha
-  - Kaal Sarp Dosha
-- **Performance**: Results are cached for optimized retrieval
+- **Purpose**: Provide detailed analysis of doshas affecting the user's profile
+- **Dosha Analysis**: Mangal Dosha, Kaal Sarp Dosha
+- **Performance**: Results cached for optimized retrieval
 
-### 4. **MANAGE SAVED REPORTS**
+### 4. **Manage Saved Reports**
 - **Description**: CRUD operations for Historical Charts
 - **Actors**: Registered User
 - **Purpose**: Store, retrieve, update, and manage historical astrological calculations
 - **Database**: MongoDB
-- **Operations**:
-  - Create new reports
-  - Read/View historical reports
-  - Update existing reports
-  - Delete reports
+- **Operations**: Create, Read, Update, Delete historical charts
 
-### 5. **REQUEST ACCOUNT DELETION**
-- **Description**: Soft-Delete with 30-Day Window
+### 5. **Request Account Deletion**
+- **Description**: Soft-Delete with 30-Day Recovery Window
 - **Actors**: Registered User
-- **Purpose**: Allow users to request account deletion with a recovery period
-- **Details**: 
-  - Soft delete mechanism (data not immediately removed)
-  - 30-day grace period for account restoration
-  - After 30 days, permanent deletion executed
+- **Purpose**: Allow users to safely request account deletion with recovery option
+- **Implementation**: Soft-delete mechanism protects against accidental data loss
+- **Recovery Window**: 30 days for account restoration before permanent deletion
 
-## External Systems
+## System Architecture
 
-### VedicAstro API
-- **Integration Point**: Used by "Calculate Birth Chart" use case
-- **Purpose**: External service for astronomical calculations and chart rendering
-- **Responsibility**: Compute planetary positions, generate visual charts
-
-### MongoDB Database
-- **Integration Point**: Data persistence layer
-- **Purpose**: Store user profiles, historical reports, and astrological data
-- **Connections**: 
-  - From "Manage Saved Reports" for CRUD operations
-  - From "Analyse Dosha Status" for caching and retrieval
-
-## System Interactions
-
-### Data Flow
-1. User provides birth information → MANAGE BIRTH PROFILE
-2. Birth data processed → CALCULATE BIRTH CHART (via VedicAstro API)
-3. Chart data stored → MongoDB
-4. Historical data retrieved → MANAGE SAVED REPORTS
-5. Dosha analysis performed → ANALYSE DOSHA STATUS (cached results)
-6. Account deletion requested → REQUEST ACCOUNT DELETION (soft delete with 30-day window)
-
-## Key Features
-- **Real-time Calculation**: Immediate birth chart generation
-- **Data Persistence**: Comprehensive historical record management
-- **External Integration**: Utilizes VedicAstro API for accurate computations
-- **User Privacy**: Soft-delete mechanism with recovery window
-- **Performance Optimization**: Caching strategy for dosha analysis
-- **Multi-functional Access**: All features accessible to authenticated users
-
-## Database Schema Integration
-- **UserProfile**: Stores DOB, TOB, and coordinates
-- **BirthChart**: Stores calculated chart data and VedicAstro API responses
-- **DoshaReport**: Stores dosha analysis results with cache information
-- **HistoricalCharts**: Maintains audit trail of all user reports
-
-## Security Considerations
-- User authentication required for all use cases
-- Role-based access control for user data
-- Soft-delete implementation protects against accidental data loss
-- Data encryption for sensitive birth information
+| Component | Purpose | Details |
+|-----------|---------|---------|
+| **Registered User** | Primary Actor | Interacts with all use cases |
+| **Birth Profile Management** | Data Intake | Stores biographical information |
+| **Chart Calculation Engine** | Processing | Integrates with VedicAstro API |
+| **Dosha Analysis Engine** | Analysis | Mangal & Kaal Sarp analysis with caching |
+| **Report Management** | CRUD Operations | Historical data maintenance in MongoDB |
+| **Account Management** | User Control | Soft-delete with 30-day window |
+| **VedicAstro API** | External Service | Astronomical calculations |
+| **MongoDB** | Database | Centralized data storage |
