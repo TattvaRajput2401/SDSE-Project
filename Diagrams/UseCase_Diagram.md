@@ -1,3 +1,8 @@
+# Astrology Platform - Use Case Architecture
+
+Below is the use case diagram outlining the primary interactions, internal services, and external dependencies for the platform.
+
+```mermaid
 graph LR
     subgraph System["Astrology Platform"]
         subgraph UserCases["User Use Cases"]
@@ -20,7 +25,7 @@ graph LR
         DB["MongoDB"]
     end
     
-    Actor["👤 Registered    User"]
+    Actor["👤 Registered User"]
     
     %% User interactions
     Actor -->|Uses| UC1
