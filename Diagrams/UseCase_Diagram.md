@@ -1,37 +1,42 @@
 ```mermaid
-flowchart LR
-    %% Actors
-    SiteUser("Site User")
-    Webmaster("Webmaster")
+%%{init: {'theme': 'dark', 'themeVariables': { 'darkMode': true }}}%%
 
-    %% Use Cases
-    SearchDocs(["Search Docs - Full Text"])
-    BrowseDocs(["Browse Docs"])
-    ViewEvents(["View Events"])
-    UploadDocs(["Upload Docs<br/><b>extension points</b><br/>Manage Folders"])
-    PostNewEvent(["Post New Event to Homepage"])
-    AddUser(["Add User<br/><b>extension points</b><br/>Add Company"])
-    
-    DownloadDocs(["Download Docs"])
-    PreviewDoc(["Preview Doc"])
-    ManageFolders(["Manage Folders"])
-    AddCompany(["Add Company"])
+graph LR
 
-    %% Actor Relationships
-    SiteUser --- SearchDocs
-    SiteUser --- BrowseDocs
-    SiteUser --- ViewEvents
-    SiteUser --- UploadDocs
+  Actor(["👤 Registered User"])
 
-    Webmaster --- PostNewEvent
-    Webmaster --- AddUser
+  subgraph System ["🪐 Vedic Astrology System"]
+    UC1(["Manage birth profile\n(DOB · TOB · Coordinates)"])
+    UC2(["Calculate birth chart\n(Virtual rendering)"])
+    UC3(["Analyse dosha status\n(Mangal · Kaal Sarp)"])
+    UC4(["Manage saved reports\n(CRUD operations)"])
+    UC5(["Request account deletion\n(Soft-delete · 30 days)"])
+  end
 
-    %% Include Relationships
-    SearchDocs -.->|"<<Include>>"| DownloadDocs
-    SearchDocs -.->|"<<Include>>"| PreviewDoc
-    BrowseDocs -.->|"<<Include>>"| PreviewDoc
+  subgraph External ["⚙️ External Systems"]
+    API(["VedicAstro API\n(Planetary calculations)"])
+    DB(["MongoDB\n(Data persistence)"])
+  end
 
-    %% Extend Relationships
-    ManageFolders -.->|"<<Extend>>"| UploadDocs
-    AddCompany -.->|"<<Extend>>"| AddUser
+  Actor --> UC1
+  Actor --> UC2
+  Actor --> UC3
+  Actor --> UC4
+  Actor --> UC5
+
+  UC1 -.->|«include»| DB
+  UC2 -.->|«include»| API
+  UC2 -.->|«include»| DB
+  UC3 -.->|«include»| DB
+  UC4 -.->|«include»| DB
+  UC5 -.->|«include»| DB
+
+  style Actor   fill:#1a237e,stroke:#9fa8da,color:#e8eaf6
+  style UC1     fill:#2e7d32,stroke:#81c784,color:#f1f8e9
+  style UC2     fill:#2e7d32,stroke:#81c784,color:#f1f8e9
+  style UC3     fill:#2e7d32,stroke:#81c784,color:#f1f8e9
+  style UC4     fill:#2e7d32,stroke:#81c784,color:#f1f8e9
+  style UC5     fill:#2e7d32,stroke:#81c784,color:#f1f8e9
+  style API     fill:#bf360c,stroke:#ff8a65,color:#fbe9e7
+  style DB      fill:#bf360c,stroke:#ff8a65,color:#fbe9e7
 ```
